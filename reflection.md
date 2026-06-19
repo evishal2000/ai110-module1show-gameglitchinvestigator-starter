@@ -32,19 +32,18 @@ Answer each question in 3 to 5 sentences. Be specific and honest about what actu
 
 ## 2. How did you use AI as a teammate?
 
-- Which AI tools did you use on this project (for example: ChatGPT, Gemini, Copilot)?
-- Give one example of an AI suggestion that was correct (including what the AI suggested and how you verified the result).
-- Give one example of an AI suggestion that was incorrect or misleading (including what the AI suggested and how you verified the result).
-  Claude
+I used **Claude (in Claude Code / agent mode)** as my main AI teammate on this project. I treated it like a pair-programming partner: I described each bug from my list and asked it to explain the cause before changing anything, rather than just letting it rewrite the file.
+
+- **A suggestion that was correct:** When the "New Game" button looked dead, I asked why the game stayed stuck on the game-over screen. Claude pointed out that `start_new_round` reset the secret and attempts but never reset `status`, so the `st.stop()` guard fired immediately after the rerun. I verified this by adding the status reset, then actually clicking through a full lose → New Game cycle in the running app and confirming a fresh round started.
+- **A suggestion that was misleading:** For clearing the input box after a guess, the first approach we reached for was calling `st.rerun()` right after submitting. That technically cleared the box, but it also wiped the "Go HIGHER/LOWER" hint message before I could read it. I caught this by testing it live, and we switched to an `on_click` callback that stores the feedback in `session_state` and clears the box — so the message survives the rerun.
 
 ---
 
 ## 3. Debugging and testing your fixes
 
-- How did you decide whether a bug was really fixed?
-- Describe at least one test you ran (manual or using pytest)  
-  and what it showed you about your code.
-- Did AI help you design or understand any tests? How?
+- **How I decided a bug was really fixed:** For pure logic bugs I relied on `pytest` going green, and for the UI/state bugs I reproduced the exact steps from my bug table and watched the Developer Debug Info panel to confirm the secret, attempts, and status behaved correctly.
+- **A test I ran:** I ran `pytest` and specifically added cases that target the backwards-hint bug, like `check_guess(60, 50)` asserting `"Too High"` and `check_guess(100, 20)` asserting `"Too High"`. The second one was useful because as strings `"100" < "20"`, so it proved the comparison is truly numeric and not accidentally comparing strings (the old even-attempt bug). All 14 tests passed after the fixes.
+- **Did AI help with tests?** Yes — Claude helped me write `parse_guess` tests for empty input, whitespace, and `"abc"`, which map directly to the "attempt mistracked" bug (invalid input should return `ok=False` and never consume a turn). It also diagnosed a `ModuleNotFoundError` when I ran bare `pytest`, explaining that the repo root wasn't on `sys.path`, and we fixed it by adding a root `conftest.py`.
 
 ---
 
