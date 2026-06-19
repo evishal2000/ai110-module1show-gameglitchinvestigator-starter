@@ -49,13 +49,12 @@ I used **Claude (in Claude Code / agent mode)** as my main AI teammate on this p
 
 ## 4. What did you learn about Streamlit and state?
 
-- How would you explain Streamlit "reruns" and session state to a friend who has never used Streamlit?
+The biggest thing I learned is that Streamlit re-runs the *entire* script top-to-bottom on every interaction — every button click, text input, or widget change. I'd explain it to a friend like this: imagine the whole file restarts from line 1 each time you touch anything, so any normal Python variable you set is forgotten instantly. `st.session_state` is the one box that survives those restarts — it's like a backpack the app carries between runs, so that's where the secret number, attempts, and score have to live. The order things run in matters too: because the script flows top-down, my debug panel was "one submit behind" until I moved the guess logic into an `on_click` callback that updates `session_state` *before* the page re-renders. Once I pictured the rerun-from-scratch model, most of the state bugs (the resetting secret, the dead New Game button, the stale debug panel) suddenly made sense as the same root cause.
 
 ---
 
 ## 5. Looking ahead: your developer habits
 
-- What is one habit or strategy from this project that you want to reuse in future labs or projects?
-  - This could be a testing habit, a prompting strategy, or a way you used Git.
-- What is one thing you would do differently next time you work with AI on a coding task?
-- In one or two sentences, describe how this project changed the way you think about AI generated code.
+- **Habit I want to reuse:** Writing the bug down first — input, expected, and actual — before touching any code. Filling out that bug table forced me to actually reproduce each glitch and gave me a concrete pass/fail check, instead of "fixing" something and hoping. I also want to keep the pattern of pinning logic with `pytest` (like the `check_guess(100, 20)` → `"Too High"` case) so a fix can't silently regress.
+- **What I'd do differently with AI:** I'd ask the AI to *explain the cause before writing any code* every single time. A couple of times I let it jump straight to a fix (the `st.rerun()` suggestion that wiped my hint message) and only caught the problem by testing live — if I'd made it justify the approach first, I'd have spotted that it nuked the feedback message before I burned time on it.
+- **How this changed my thinking:** I now treat AI-generated code as a confident *draft from a teammate*, not a finished answer — it's fast and often right about the cause, but it will hand you plausible code that's subtly wrong (like comparing strings instead of ints), so I'm the one who has to test it and stay in control.
